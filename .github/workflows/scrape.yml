@@ -1,0 +1,38 @@
+name: Update Stream Playlist
+
+on:
+  workflow_dispatch: # Manual run
+  schedule:
+    - cron: '*/30 * * * *' # Run every 30 minutes during match time
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Important: Gives GitHub permission to save the file
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium
+          sudo playwright install-deps chromium
+
+      - name: Run Scraper
+        run: python your_script.py
+
+      - name: Commit and Push M3U
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add live.m3u
+          git commit -m "Update live.m3u playlist" || echo "No changes to commit"
+          git push
