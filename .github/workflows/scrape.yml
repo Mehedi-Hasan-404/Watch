@@ -3,7 +3,7 @@ name: Update Stream Playlist
 on:
   workflow_dispatch: # Allows manual trigger
   schedule:
-    - cron: '*/30 * * * *' # Optional: Auto-update every 30 mins
+    - cron: '*/30 * * * *' # Auto-runs every 30 mins
 
 jobs:
   build:
@@ -19,12 +19,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+          cache: 'pip'
 
       - name: Install Dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install playwright
-          # This installs chromium and the system libraries in one go
-          npx playwright install chromium --with-deps
+          # Using the python module to install ensures path alignment
+          python -m playwright install chromium --with-deps
 
       - name: Run Scraper
         timeout-minutes: 2
@@ -32,9 +34,8 @@ jobs:
 
       - name: Commit and Push M3U
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          # Check if file exists and has changes before committing
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           if [ -f live.m3u ]; then
             git add live.m3u
             git commit -m "Update live.m3u [skip ci]" || echo "No changes to commit"
